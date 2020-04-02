@@ -17,7 +17,10 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False, verbose=
     Keyword Arguments:
         p_mod {ndarray} -- model data for the future scenario (default: {None})
         proj_adj_type {str} -- type of adjustment to be applied to the future scenario
-                            -- 'cdf' or 'edcdf' (default: {'cdf'})
+                            -- 'cdf' quantile mapping (default)
+                            -- 'edcdf' Equidistant CDF; Li et al. (2010)
+                            -- 'dqm' Detrended QM; Cannon et al. (2015)
+                            -- 'qdm' Quantile Delta Mapping; Cannon et al. (2015)
         wet_day {bool} -- indicating whether to perform wet day correction or not
                 {float} -- threshold below which all values are set to zero
     
@@ -52,12 +55,22 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False, verbose=
         if verbose:
             print('Projection model data available, performing bias adjustment...')
         p_mod_adj = p_mod.copy()
-        fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
+        # fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
         fit2 = r_qmap.fitQmapQUANT(_c_mod, _p_mod, wet_day=wet_day)
         if proj_adj_type == 'edcdf':
             if verbose:
                 print('Method: EDCDF')
-            p_mod_adj[~np.isnan(p_mod_adj)] += r_qmap.doQmapQUANT(_p_mod , fit1) - r_qmap.doQmapQUANT(_p_mod, fit2)
+            p_mod_adj[~np.isnan(p_mod_adj)] = p_mod_adj[~np.isnan(p_mod_adj)] + r_qmap.doQmapQUANT(_p_mod , fit1) - r_qmap.doQmapQUANT(_p_mod, fit2)
+        elif proj_adj_type == 'dqm':
+            if verbose:
+                print('Method: DQM')
+            scl_fct = _c_mod.mean() / _p_mod.mean()
+            p_mod_adj[~np.isnan(p_mod_adj)] =  r_qmap.doQmapQUANT(scl_fct * _p_mod , fit1) / scl_fct
+        elif proj_adj_type == 'qdm':
+            if verbose:
+                print('Method: QDM')
+            fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
+            p_mod_adj[~np.isnan(p_mod_adj)] = p_mod_adj[~np.isnan(p_mod_adj)] * r_qmap.doQmapQUANT(_p_mod , fit1) / r_qmap.doQmapQUANT(_p_mod, fit2)
         else:
             if verbose:
                 print('Method: CDF')
