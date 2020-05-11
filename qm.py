@@ -64,7 +64,7 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
         print('Historical model data available, performing bias adjustment...')
     c_mod_adj = c_mod.copy()
     fit1 = r_qmap.fitQmapQUANT(_obs, _c_mod, wet_day=wet_day)
-    if transform_method is not None:
+    if transform_method in transform_method_enum:
         _c_mod_adj = r_qmap.doQmapQUANT(_c_mod, fit1).reshape(-1, 1)
         c_mod_adj[c_mod_mask] = obs_pt.inverse_transform(_c_mod_adj).round(decimals).flatten()
     else:
@@ -90,16 +90,18 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
             fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
         fit2 = r_qmap.fitQmapQUANT(_c_mod, _p_mod, wet_day=wet_day)
         scl_fct = 1.0
-        if proj_adj_type == 'dqm':
+        if (proj_adj_type == 'dqm'):
             if verbose:
                 print('Method: DQM')
-            scl_fct = _c_mod.mean() / _p_mod.mean()
+            if transform_method not in transform_method_enum:
+                scl_fct = _c_mod.mean() / _p_mod.mean()
 
         p1 = r_qmap.doQmapQUANT(scl_fct * _p_mod, fit1) / scl_fct
         if transform_method is not None:
             p1 = obs_pt.inverse_transform(p1.reshape(-1, 1)).round(decimals).flatten()
         if proj_adj_type in ['edcdf', 'qdm']:
             p2 = r_qmap.doQmapQUANT(_p_mod, fit2)
+            p0 = _p_mod
             if transform_method is not None:
                 p2 = c_mod_pt.inverse_transform(p2.reshape(-1, 1)).round(decimals).flatten()
                 p0 = p_mod_pt.inverse_transform(_p_mod.reshape(-1, 1)).round(decimals).flatten()
