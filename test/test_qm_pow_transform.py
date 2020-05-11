@@ -10,6 +10,9 @@ from qm import do_qmap
 sns.set_context('paper')
 sns.set_style('ticks')
 
+transform_method = 'box-cox'
+transform_method = 'yeo-johnson'
+
 rf_yrs = [1986, 2005]
 proj_yrs = [2046, 2065]
 
@@ -81,7 +84,7 @@ for m in range(1, 13):
     _obs_df = dats['obs']['dat'].loc[(slice(None), m), ]
     _c_mod_df = dats['c_mod']['dat'].loc[(slice(None), m), ].copy()
     _c_mod_adj_df = _c_mod_df.copy()
-    _c_mod_adj_df['val'] = do_qmap(_obs_df['val'].to_numpy(), _c_mod_df['val'].to_numpy(), transform='log')
+    _c_mod_adj_df['val'] = do_qmap(_obs_df['val'].to_numpy(), _c_mod_df['val'].to_numpy(), transform_method=transform_method)
     c_mod_adj_df.append(_c_mod_adj_df)
 
 dats['c_mod_adj'] = dict()
@@ -101,7 +104,7 @@ for adj_type in adj_types:
         _, _p_mod_adj_df['val'] = do_qmap(
                                     _obs_df['val'].to_numpy(),
                                     _c_mod_df['val'].to_numpy(), _p_mod_df['val'].to_numpy(),
-                                    proj_adj_type=adj_type, transform='log')
+                                    proj_adj_type=adj_type, transform_method=transform_method)
         p_mod_adj_df.append(_p_mod_adj_df)
 
     dats[dat_name]['dat'] = pd.concat(p_mod_adj_df, sort=True)

@@ -1,13 +1,17 @@
 import numpy as np
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
+from sklearn.preprocessing import PowerTransformer
 
 r_qmap = importr('qmap')
 pandas2ri.activate()
 
+transform_method_enum = ['box-cox', 'yeo-johnson']
+proj_adj_type_enum = ['cdf', 'dqm', 'edcdf', 'qdm']
+
 
 def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
-            transform=None, verbose=True):
+            transform_method=None, verbose=True):
     """ Quantile mapping
 
     Arguments:
@@ -23,8 +27,9 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
                             -- 'qdm' Quantile Delta Mapping; Cannon et al. (2015)
         wet_day {bool} -- indicating whether to perform wet day correction or not
                 {float} -- threshold below which all values are set to zero
-        transform {str} -- apply data transform (default: {None})
-                        -- 'log' log transform
+        transform_method {str} -- apply data transform (default: {None})
+                        -- implements sklean PowerTransform to transform data using
+                        -- 'box-cox' or 'yeo-johnson' method
 
     Returns:
         [type] -- [description]
@@ -37,11 +42,15 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
     obs_mask = ~np.isnan(obs)
     c_mod_mask = ~np.isnan(c_mod)
 
-    if transform == 'log':
-        obs_mask &= np.greater(obs, 0, where=obs_mask)
-        c_mod_mask &= np.greater(c_mod, 0, where=c_mod_mask)
-        _obs = np.log(obs[obs_mask]).round(decimals)
-        _c_mod = np.log(c_mod[c_mod_mask]).round(decimals)
+    if transform_method in transform_method_enum:
+        if transform_method == 'box-cox':
+            obs_mask &= np.greater(obs, 0, where=obs_mask)
+            c_mod_mask &= np.greater(c_mod, 0, where=c_mod_mask)
+        pt = PowerTransformer(method=transform_method, standardize=True)
+        obs_pt = pt.fit(obs[obs_mask].reshape(-1, 1))
+        _obs = obs_pt.transform(obs[obs_mask].reshape(-1, 1)).round(decimals).flatten()
+        c_mod_pt = pt.fit(c_mod[c_mod_mask].reshape(-1, 1))
+        _c_mod = c_mod_pt.transform(c_mod[c_mod_mask].reshape(-1, 1)).round(decimals).flatten()
     else:
         _obs = obs[obs_mask].round(decimals)
         _c_mod = c_mod[c_mod_mask].round(decimals)
@@ -55,8 +64,9 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
         print('Historical model data available, performing bias adjustment...')
     c_mod_adj = c_mod.copy()
     fit1 = r_qmap.fitQmapQUANT(_obs, _c_mod, wet_day=wet_day)
-    if transform == 'log':
-        c_mod_adj[c_mod_mask] = np.exp(r_qmap.doQmapQUANT(_c_mod, fit1))
+    if transform_method is not None:
+        _c_mod_adj = r_qmap.doQmapQUANT(_c_mod, fit1).reshape(-1, 1)
+        c_mod_adj[c_mod_mask] = obs_pt.inverse_transform(_c_mod_adj).round(decimals).flatten()
     else:
         c_mod_adj[c_mod_mask] = r_qmap.doQmapQUANT(_c_mod, fit1)
     if verbose:
@@ -65,39 +75,46 @@ def do_qmap(obs, c_mod, p_mod=None, proj_adj_type='cdf', wet_day=False,
     _p_mod = []
     if p_mod is not None:
         p_mod_mask = ~np.isnan(p_mod)
-        if transform == 'log':
-            p_mod_mask &= np.greater(p_mod, 0, where=p_mod_mask)
-            _p_mod = np.log(p_mod[p_mod_mask]).round(decimals)
+        if transform_method in transform_method_enum:
+            if transform_method == 'box-cox':
+                p_mod_mask &= np.greater(p_mod, 0, where=p_mod_mask)
+            p_mod_pt = pt.fit(p_mod[p_mod_mask].reshape(-1, 1))
+            _p_mod = p_mod_pt.transform(p_mod[p_mod_mask].reshape(-1, 1)).round(decimals).flatten()
         else:
             _p_mod = p_mod[p_mod_mask].round(decimals) 
     if len(_p_mod) > 0:
         if verbose:
             print('Projection model data available, performing bias adjustment...')
         p_mod_adj = p_mod.copy()
-        # fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
+        if proj_adj_type == 'qdm':
+            fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
         fit2 = r_qmap.fitQmapQUANT(_c_mod, _p_mod, wet_day=wet_day)
-        if proj_adj_type == 'edcdf':
-            if verbose:
-                print('Method: EDCDF')
-            _p_mod_adj = _p_mod + r_qmap.doQmapQUANT(_p_mod, fit1) - r_qmap.doQmapQUANT(_p_mod, fit2)
-        elif proj_adj_type == 'dqm':
+        scl_fct = 1.0
+        if proj_adj_type == 'dqm':
             if verbose:
                 print('Method: DQM')
             scl_fct = _c_mod.mean() / _p_mod.mean()
-            _p_mod_adj = r_qmap.doQmapQUANT(scl_fct * _p_mod, fit1) / scl_fct
-        elif proj_adj_type == 'qdm':
-            if verbose:
-                print('Method: QDM')
-            fit1 = r_qmap.fitQmapQUANT(_obs, _p_mod, wet_day=wet_day)
-            _p_mod_adj = _p_mod * r_qmap.doQmapQUANT(_p_mod, fit1) / r_qmap.doQmapQUANT(_p_mod, fit2)
+
+        p1 = r_qmap.doQmapQUANT(scl_fct * _p_mod, fit1) / scl_fct
+        if transform_method is not None:
+            p1 = obs_pt.inverse_transform(p1.reshape(-1, 1)).round(decimals).flatten()
+        if proj_adj_type in ['edcdf', 'qdm']:
+            p2 = r_qmap.doQmapQUANT(_p_mod, fit2)
+            if transform_method is not None:
+                p2 = c_mod_pt.inverse_transform(p2.reshape(-1, 1)).round(decimals).flatten()
+                p0 = p_mod_pt.inverse_transform(_p_mod.reshape(-1, 1)).round(decimals).flatten()
+            if proj_adj_type == 'edcdf':
+                if verbose:
+                    print('Method: EDCDF')
+                _p_mod_adj = p0 + p1 - p2
+            elif proj_adj_type == 'qdm':
+                if verbose:
+                    print('Method: QDM')
+                _p_mod_adj = p0 * p1 / p2
         else:
-            if verbose:
-                print('Method: CDF')
-            _p_mod_adj = r_qmap.doQmapQUANT(_p_mod, fit1)
-        if transform == 'log':
-            p_mod_adj[p_mod_mask] = np.exp(_p_mod_adj)
-        else:
-            p_mod_adj[p_mod_mask] = _p_mod_adj
+            _p_mod_adj = p1
+
+        p_mod_adj[p_mod_mask] = _p_mod_adj
         if verbose:
             print('Bias adjustment done.')
         return (c_mod_adj, p_mod_adj)
