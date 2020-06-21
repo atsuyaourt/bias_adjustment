@@ -46,13 +46,19 @@ def do_qmap(
     if (obs is None) | (ref_mod is None):
         return None
 
+    mod = ref_mod.copy()
+    if proj_mod is not None:
+        mod = np.concatenate((mod, proj_mod))
+
     obs_mask = ~np.isnan(obs)
     ref_mod_mask = ~np.isnan(ref_mod)
+    mod_mask = ~np.isnan(mod)
 
     if transform_method in transform_method_enum:
         if transform_method == "box-cox":
             obs_mask &= np.greater(obs, 0, where=obs_mask)
             ref_mod_mask &= np.greater(ref_mod, 0, where=ref_mod_mask)
+            mod_mask &= np.greater(mod, 0, where=mod_mask)
         pt = PowerTransformer(method=transform_method, standardize=True)
         obs_pt = pt.fit(obs[obs_mask].reshape(-1, 1))
         _obs = obs_pt.transform(obs[obs_mask].reshape(-1, 1)).round(decimals).flatten()
@@ -62,63 +68,33 @@ def do_qmap(
             .round(decimals)
             .flatten()
         )
+        mod_pt = pt.fit(mod[mod_mask].reshape(-1, 1))
+        _mod = mod_pt.transform(mod[mod_mask].reshape(-1, 1)).round(decimals).flatten()
     else:
         _obs = obs[obs_mask].round(decimals)
         _ref_mod = ref_mod[ref_mod_mask].round(decimals)
+        _mod = mod[mod_mask].round(decimals)
 
-    if len(_ref_mod) == 0:
+    if _mod.size > 0:
         if verbose:
-            print("No available historical model data, cancelling...")
-        return None
-
-    if verbose:
-        print("Historical model data available, performing bias adjustment...")
-    ref_mod_adj = ref_mod.copy()
-    fit1 = r_qmap.fitQmapQUANT(_obs, _ref_mod, wet_day=wet_day)
-    if transform_method in transform_method_enum:
-        _ref_mod_adj = r_qmap.doQmapQUANT(_ref_mod, fit1).reshape(-1, 1)
-        ref_mod_adj[ref_mod_mask] = (
-            obs_pt.inverse_transform(_ref_mod_adj).round(decimals).flatten()
-        )
-    else:
-        ref_mod_adj[ref_mod_mask] = r_qmap.doQmapQUANT(_ref_mod, fit1)
-    if verbose:
-        print("Bias adjustment done.")
-
-    _proj_mod = []
-    if proj_mod is not None:
-        proj_mod_mask = ~np.isnan(proj_mod)
-        if transform_method in transform_method_enum:
-            if transform_method == "box-cox":
-                proj_mod_mask &= np.greater(proj_mod, 0, where=proj_mod_mask)
-            proj_mod_pt = pt.fit(proj_mod[proj_mod_mask].reshape(-1, 1))
-            _proj_mod = (
-                proj_mod_pt.transform(proj_mod[proj_mod_mask].reshape(-1, 1))
-                .round(decimals)
-                .flatten()
-            )
-        else:
-            _proj_mod = proj_mod[proj_mod_mask].round(decimals)
-    if len(_proj_mod) > 0:
-        if verbose:
-            print("Projection model data available, performing bias adjustment...")
-        proj_mod_adj = proj_mod.copy()
-        if adj_type == "qdm":
-            fit1 = r_qmap.fitQmapQUANT(_obs, _proj_mod, wet_day=wet_day)
-        fit2 = r_qmap.fitQmapQUANT(_ref_mod, _proj_mod, wet_day=wet_day)
+            print("Performing bias adjustment...")
+        mod_adj = mod.copy()
+        # if adj_type == "qdm":
+        fit1 = r_qmap.fitQmapQUANT(_obs, _mod, wet_day=wet_day)
+        fit2 = r_qmap.fitQmapQUANT(_ref_mod, _mod, wet_day=wet_day)
         scl_fct = 1.0
         if adj_type == "dqm":
             if verbose:
                 print("Method: DQM")
             if transform_method not in transform_method_enum:
-                scl_fct = _ref_mod.mean() / _proj_mod.mean()
+                scl_fct = _ref_mod.mean() / _mod.mean()
 
-        p1 = r_qmap.doQmapQUANT(scl_fct * _proj_mod, fit1) / scl_fct
+        p1 = r_qmap.doQmapQUANT(scl_fct * _mod, fit1) / scl_fct
         if transform_method is not None:
             p1 = obs_pt.inverse_transform(p1.reshape(-1, 1)).round(decimals).flatten()
         if adj_type in ["edcdf", "qdm"]:
-            p2 = r_qmap.doQmapQUANT(_proj_mod, fit2)
-            p0 = _proj_mod
+            p2 = r_qmap.doQmapQUANT(_mod, fit2)
+            p0 = _mod
             if transform_method is not None:
                 p2 = (
                     ref_mod_pt.inverse_transform(p2.reshape(-1, 1))
@@ -126,23 +102,29 @@ def do_qmap(
                     .flatten()
                 )
                 p0 = (
-                    proj_mod_pt.inverse_transform(_proj_mod.reshape(-1, 1))
+                    mod_pt.inverse_transform(_mod.reshape(-1, 1))
                     .round(decimals)
                     .flatten()
                 )
             if adj_type == "edcdf":
                 if verbose:
                     print("Method: EDCDF")
-                _proj_mod_adj = p0 + p1 - p2
+                _mod_adj = p0 + p1 - p2
             elif adj_type == "qdm":
                 if verbose:
                     print("Method: QDM")
-                _proj_mod_adj = p0 * p1 / p2
+                _mod_adj = p0 * p1 / p2
         else:
-            _proj_mod_adj = p1
+            _mod_adj = p1
 
-        proj_mod_adj[proj_mod_mask] = _proj_mod_adj
+        mod_adj[mod_mask] = _mod_adj
         if verbose:
             print("Bias adjustment done.")
-        return (ref_mod_adj, proj_mod_adj)
-    return ref_mod_adj
+        if mod_adj.size == ref_mod.size:
+            return mod_adj
+        else:
+            return (mod_adj[0 : ref_mod.size], mod_adj[ref_mod.size :])
+    else:
+        if verbose:
+            print("No available model data, cancelling...")
+        return None
