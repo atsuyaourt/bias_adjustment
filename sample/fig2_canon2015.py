@@ -89,34 +89,15 @@ plt.tight_layout()
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.plot([0, 1], [0, 1], color="black", linestyle=":")
 q = [0.25, 0.5, 0.75, 0.95, 0.99]
-c = gamma.ppf(
-    q, dats["modh"]["k"], loc=dats["modh"]["loc"], scale=dats["modh"]["scale"]
-)
-x = (
-    gamma.ppf(
-        q, dats["modf"]["k"], loc=dats["modf"]["loc"], scale=dats["modf"]["scale"]
-    )
-    - c
-) / c
+p = np.multiply(100, q)
+c = np.percentile(dats["modh"]["dat"], p)
+x = (np.percentile(dats["modf"]["dat"], p) - c) / c
 adj_types = ["qm", "qdm.rel"]
 for adj_type in adj_types:
     dat_name = "modh_adj_" + adj_type
-    c = gamma.ppf(
-        q,
-        dats[dat_name]["k"],
-        loc=dats[dat_name]["loc"],
-        scale=dats[dat_name]["scale"],
-    )
+    c = np.percentile(dats[dat_name]["dat"], p)
     dat_name = "modf_adj_" + adj_type
-    y = (
-        gamma.ppf(
-            q,
-            dats[dat_name]["k"],
-            loc=dats[dat_name]["loc"],
-            scale=dats[dat_name]["scale"],
-        )
-        - c
-    ) / c
+    y = (np.percentile(dats[dat_name]["dat"], p) - c) / c
     ax.plot(
         x,
         y,
