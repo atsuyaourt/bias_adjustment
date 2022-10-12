@@ -28,24 +28,23 @@ plt_args = {
     },
 }
 
+
+def generate_test_data(size=1000, random_state=None):
+    dats = {
+        "obs": {"k": 4, "loc": 0, "scale": 7.5},
+        "modh": {"k": 8.15, "loc": 0, "scale": 3.68},
+        "modf": {"k": 16, "loc": 0, "scale": 2.63},
+    }
+    for dat_name, dat_info in dats.items():
+        dats[dat_name]["dat"] = gamma.rvs(
+            dat_info["k"], scale=dat_info["scale"], size=size, random_state=random_state
+        )
+    return dats
+
+
+dats = generate_test_data(size=10000, random_state=1)
+
 # region process data
-N = 10000
-seed = 1
-
-dats = {
-    "obs": {"k": 4, "loc": 0, "scale": 7.5},
-    "modh": {"k": 8.15, "loc": 0, "scale": 3.68},
-    "modf": {"k": 16, "loc": 0, "scale": 2.63},
-}
-
-for dat_name, dat_info in dats.items():
-    dats[dat_name]["dat"] = gamma.rvs(
-        dat_info["k"], scale=dat_info["scale"], size=N, random_state=seed
-    )
-    dats[dat_name]["mu"], dats[dat_name]["var"] = gamma.stats(
-        dat_info["k"], scale=dat_info["scale"]
-    )
-
 dist_type = "gamma"
 dat_types = ["modh", "modf"]
 adj_types = ["qm", "qdm.rel"]
@@ -62,11 +61,6 @@ for dat_type in dat_types:
         dats[dat_name]["k"] = k
         dats[dat_name]["loc"] = loc
         dats[dat_name]["scale"] = scale
-        dats[dat_name]["mu"], dats[dat_name]["var"] = gamma.stats(
-            dats[dat_name]["k"],
-            loc=dats[dat_name]["loc"],
-            scale=dats[dat_name]["scale"],
-        )
 # endregion process data
 
 
@@ -74,10 +68,10 @@ for dat_type in dat_types:
 x = np.linspace(0, 100, 101)
 fig, ax = plt.subplots(figsize=(8, 5.5))
 for dat_name, dat_info in dats.items():
-    mu = dat_info["mu"]
-    sd = np.sqrt(dat_info["var"])
+    mu = dat_info["dat"].mean().round(1)
+    std = dat_info["dat"].std().round(1)
     y = gamma.pdf(x, dat_info["k"], loc=dat_info["loc"], scale=dat_info["scale"])
-    label = f"{plt_args[dat_name]['name']}; $\mu$={mu:2.1f}, sd={sd:2.1f}"
+    label = f"{plt_args[dat_name]['name']}; $\mu$={mu}, sd={std}"
     ax.plot(
         x,
         y,
