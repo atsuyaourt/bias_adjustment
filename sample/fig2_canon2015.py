@@ -6,7 +6,6 @@ import seaborn as sns
 
 from bias_adjustment import BiasAdjustment
 
-# sns.set_context('talk')
 sns.set_context("paper")
 sns.set_style("ticks")
 
@@ -42,9 +41,9 @@ def generate_test_data(size=1000, random_state=None):
     return dats
 
 
+# region process data
 dats = generate_test_data(size=10000, random_state=1)
 
-# region process data
 dist_type = "gamma"
 dat_types = ["modh", "modf"]
 adj_types = ["qm", "qdm.rel"]
