@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from qm import QuantileMapping
+from dqm import DetrendedQuantileMapping
 from qdm import QuantileDeltaMapping
 
 
@@ -22,6 +23,14 @@ class BiasAdjustment:
             return QuantileMapping(
                 self.obs, self.mod, data, min_val=self.min_val, max_cdf=self.max_cdf
             ).compute(dist_type=dist_type)
+        elif method.startswith("dqm"):
+            mode = method.split(".")[1]
+            return DetrendedQuantileMapping(
+                self.obs, self.mod, data, min_val=self.min_val, max_cdf=self.max_cdf
+            ).compute(
+                mode=mode,
+                dist_type=dist_type,
+            )
         elif method.startswith("qdm"):
             qdm_mode = method.split(".")[1]
             return QuantileDeltaMapping(

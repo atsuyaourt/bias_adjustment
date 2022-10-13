@@ -13,6 +13,11 @@ plt_args = {
     "obs": {"name": "Obs", "color": "black", "linetype": "-"},
     "modh": {"name": "Model hist", "color": "red", "linetype": "-"},
     "modh_adj_qm": {"name": "Model hist QM", "color": "red", "linetype": "--"},
+    "modh_adj_dqm.rel": {
+        "name": "Model hist DQM",
+        "color": "orange",
+        "linetype": "-.",
+    },
     "modh_adj_qdm.rel": {
         "name": "Model hist QDM",
         "color": "orange",
@@ -20,6 +25,11 @@ plt_args = {
     },
     "modf": {"name": "Model future", "color": "blue", "linetype": "-"},
     "modf_adj_qm": {"name": "Model future QM", "color": "blue", "linetype": "--"},
+    "modf_adj_dqm.rel": {
+        "name": "Model future DQM",
+        "color": "teal",
+        "linetype": "-.",
+    },
     "modf_adj_qdm.rel": {
         "name": "Model future QDM",
         "color": "teal",
@@ -46,7 +56,7 @@ dats = generate_test_data(size=10000, random_state=1)
 
 dist_type = "gamma"
 dat_types = ["modh", "modf"]
-adj_types = ["qm", "qdm.rel"]
+adj_types = ["qm", "dqm.rel", "qdm.rel"]
 
 for dat_type in dat_types:
     for adj_type in adj_types:
@@ -66,7 +76,7 @@ fig, axs = plt.subplots(1, 2, figsize=(11.2, 4.9))
 # region plot pdf gamma
 x = np.linspace(0, 100, 101)
 for dat_name, dat_info in dats.items():
-    if dat_name in ["modh_adj_qm", "modh_adj_qdm.rel"]:
+    if dat_name in ["modh_adj_qm", "modh_adj_dqm.rel", "modh_adj_qdm.rel"]:
         continue
     mu = dat_info["dat"].mean().round(1)
     std = dat_info["dat"].std().round(1)
@@ -91,7 +101,7 @@ q = [0.25, 0.5, 0.75, 0.95, 0.99]
 p = np.multiply(100, q)
 c = np.percentile(dats["modh"]["dat"], p)
 x = (np.percentile(dats["modf"]["dat"], p) - c) / c
-adj_types = ["qm", "qdm.rel"]
+adj_types = ["qm", "dqm.rel", "qdm.rel"]
 for adj_type in adj_types:
     dat_name = "modh_adj_" + adj_type
     c = np.percentile(dats[dat_name]["dat"], p)
