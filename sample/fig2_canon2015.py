@@ -63,31 +63,31 @@ for dat_type in dat_types:
         dats[dat_name]["scale"] = scale
 # endregion process data
 
-
+fig, axs = plt.subplots(1, 2, figsize=(11.2, 4.9))
 # region plot pdf gamma
 x = np.linspace(0, 100, 101)
-fig, ax = plt.subplots(figsize=(8, 5.5))
 for dat_name, dat_info in dats.items():
+    if dat_name in ["modh_adj_qm", "modh_adj_qdm.rel"]:
+        continue
     mu = dat_info["dat"].mean().round(1)
     std = dat_info["dat"].std().round(1)
     y = gamma.pdf(x, dat_info["k"], loc=dat_info["loc"], scale=dat_info["scale"])
     label = f"{plt_args[dat_name]['name']}; $\mu$={mu}, sd={std}"
-    ax.plot(
+    axs[0].plot(
         x,
         y,
         color=plt_args[dat_name]["color"],
         linestyle=plt_args[dat_name]["linetype"],
         label=label,
     )
-ax.legend()
-ax.set_xlabel("Value")
-ax.set_ylabel("Density")
-plt.tight_layout()
+axs[0].legend()
+axs[0].set_xlabel("Value")
+axs[0].set_ylabel("Density")
+axs[0].set_ylim(-0.001, 0.051)
 # endregion plot pdf gamma
 
 # region plot compare delta
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.plot([0, 1], [0, 1], color="black", linestyle=":")
+axs[1].plot([0, 1], [0, 1], color="black", linestyle=":")
 q = [0.25, 0.5, 0.75, 0.95, 0.99]
 p = np.multiply(100, q)
 c = np.percentile(dats["modh"]["dat"], p)
@@ -98,16 +98,19 @@ for adj_type in adj_types:
     c = np.percentile(dats[dat_name]["dat"], p)
     dat_name = "modf_adj_" + adj_type
     y = (np.percentile(dats[dat_name]["dat"], p) - c) / c
-    ax.plot(
+    axs[1].plot(
         x,
         y,
         color=plt_args[dat_name]["color"],
         linestyle=plt_args[dat_name]["linetype"],
         label=plt_args[dat_name]["name"],
     )
-ax.legend()
-ax.set_xlabel("Model relative change")
-ax.set_ylabel("Bias adjusted relative change")
-ax.set_xlim(0, 1)
-plt.tight_layout()
+axs[1].legend()
+axs[1].set_xlabel("Model relative change")
+axs[1].set_ylabel("Bias adjusted relative change")
+axs[1].set_xlim(0, 1)
+axs[1].set_ylim(0, 1)
 # endregion plot compare delta
+
+plt.tight_layout()
+plt.show()
