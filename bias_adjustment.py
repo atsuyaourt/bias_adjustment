@@ -10,7 +10,6 @@ from qdm import QuantileDeltaMapping
 class BiasAdjustment:
     obs: np.ndarray
     mod: np.ndarray
-    min_val: float = None
     max_cdf: float = 0.99999
 
     def adjust(
@@ -21,12 +20,12 @@ class BiasAdjustment:
     ):
         if method == "qm":
             return QuantileMapping(
-                self.obs, self.mod, data, min_val=self.min_val, max_cdf=self.max_cdf
+                self.obs, self.mod, data, max_cdf=self.max_cdf
             ).compute(dist_type=dist_type)
         elif method.startswith("dqm"):
             mode = method.split(".")[1]
             return DetrendedQuantileMapping(
-                self.obs, self.mod, data, min_val=self.min_val, max_cdf=self.max_cdf
+                self.obs, self.mod, data, max_cdf=self.max_cdf
             ).compute(
                 mode=mode,
                 dist_type=dist_type,
@@ -34,7 +33,7 @@ class BiasAdjustment:
         elif method.startswith("qdm"):
             qdm_mode = method.split(".")[1]
             return QuantileDeltaMapping(
-                self.obs, self.mod, data, min_val=self.min_val, max_cdf=self.max_cdf
+                self.obs, self.mod, data, max_cdf=self.max_cdf
             ).compute(
                 qdm_mode=qdm_mode,
                 dist_type=dist_type,

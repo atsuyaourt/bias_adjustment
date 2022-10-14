@@ -8,8 +8,8 @@ from qm import QuantileMapping
 @dataclass
 class DetrendedQuantileMapping(QuantileMapping):
     def delta(self, mode: Literal["rel", "abs"] = "rel"):
-        mod_mean = np.nanmean(self.filter_data(self.mod))
-        dat_mean = np.nanmean(self.filter_data(self.data))
+        mod_mean = np.nanmean(self.mod)
+        dat_mean = np.nanmean(self.data)
         if mode == "rel":
             return dat_mean / mod_mean
         elif mode == "abs":

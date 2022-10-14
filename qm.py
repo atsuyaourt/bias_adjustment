@@ -9,18 +9,10 @@ class QuantileMapping:
     obs: np.ndarray
     mod: np.ndarray
     data: np.ndarray
-    min_val: float = None
     max_cdf: float = 0.99999
 
-    def filter_data(self, dat: np.ndarray):
-        _dat = dat.copy()
-        if self.min_val is not None:
-            _dat = _dat[_dat >= self.min_val]
-        return _dat
-
     def generate_distribution(self, dat: np.ndarray, dist_type="hist"):
-        _dat = self.filter_data(dat)
-        return Distributions(_dat).fit(dist_type)
+        return Distributions(dat).fit(dist_type)
 
     def compute(
         self,
