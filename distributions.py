@@ -4,23 +4,28 @@ import numpy as np
 from scipy import stats as st
 
 
+def fit_hist(data, bins=200):
+    h = np.histogram(data[~np.isnan(data)], bins=bins)
+    return st.rv_histogram(h)
+
+
+def fit_dist(data, dist_type="gamma"):
+    dist = getattr(st, dist_type)
+    params = dist.fit(data[~np.isnan(data)])
+    return dist(*params)
+
+
 @dataclass
 class Distributions:
     data: np.ndarray
 
-    def fit(self, dist_type="hist", bins=100):
+    def fit(self, dist_type="hist", bins=200):
         """Generate distribution"""
 
-        _data = self.data[~np.isnan(self.data)]
-
         if dist_type == "hist":
-            h = np.histogram(_data, bins=bins, density=True)
-            return st.rv_histogram(h)
+            return fit_hist(self.data, bins)
         else:
-            # fit dist to data
-            dist = getattr(st, dist_type)
-            params = dist.fit(_data)
-            return dist(*params)
+            return fit_dist(self.data, dist_type)
 
     def best_fit(self, distributions=None, bins=100):
         """Model data by finding best fit distribution to data"""
