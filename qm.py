@@ -21,13 +21,5 @@ class QuantileMapping:
         o_dist = self.generate_distribution(self.obs, dist_type)
         m_dist = self.generate_distribution(self.mod, dist_type)
 
-        mod_max = self.mod.max()
-
-        adjusted = self.data.copy()
-        m_cdf = np.minimum(self.max_cdf, m_dist.cdf(self.data[self.data <= mod_max]))
-        adjusted[adjusted <= mod_max] = o_dist.ppf(m_cdf)
-
-        delta = o_dist.ppf(self.max_cdf) - m_dist.ppf(self.max_cdf)
-        adjusted[adjusted > mod_max] = adjusted[adjusted > mod_max] + delta
-
-        return adjusted
+        m_cdf = np.minimum(self.max_cdf, m_dist.cdf(self.data))
+        return o_dist.ppf(m_cdf)
