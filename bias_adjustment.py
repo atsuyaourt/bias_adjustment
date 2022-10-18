@@ -31,10 +31,10 @@ class BiasAdjustment:
                 dist_type=dist_type,
             )
         elif method.startswith("qdm"):
-            qdm_mode = method.split(".")[1]
+            mode = method.split(".")[1]
             return QuantileDeltaMapping(
                 self.obs, self.mod, data, max_cdf=self.max_cdf
             ).compute(
-                qdm_mode=qdm_mode,
+                mode=mode,
                 dist_type=dist_type,
             )

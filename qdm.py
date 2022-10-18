@@ -9,7 +9,7 @@ from qm import QuantileMapping
 class QuantileDeltaMapping(QuantileMapping):
     def compute(
         self,
-        qdm_mode: Literal["rel", "abs"] = "rel",
+        mode: Literal["rel", "abs"] = "rel",
         dist_type="hist",
     ) -> np.ndarray:
         o_dist = self.generate_distribution(self.obs, dist_type)
@@ -18,9 +18,9 @@ class QuantileDeltaMapping(QuantileMapping):
 
         mf_cdf = np.minimum(self.max_cdf, mf_dist.cdf(self.data))
 
-        if qdm_mode == "rel":  # Relative
+        if mode == "rel":  # Relative
             return o_dist.ppf(mf_cdf) * (self.data / mh_dist.ppf(mf_cdf))
-        elif qdm_mode == "abs":  # Absolute
+        elif mode == "abs":  # Absolute
             return o_dist.ppf(mf_cdf) + self.data - mh_dist.ppf(mf_cdf)
         else:
             return None
