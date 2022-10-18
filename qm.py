@@ -11,7 +11,8 @@ class QuantileMapping:
     data: np.ndarray
     max_cdf: float = 0.99999
 
-    def generate_distribution(self, dat: np.ndarray, dist_type="hist"):
+    @staticmethod
+    def generate_distribution(dat: np.ndarray, dist_type="hist"):
         return Distributions(dat).fit(dist_type)
 
     def compute(
