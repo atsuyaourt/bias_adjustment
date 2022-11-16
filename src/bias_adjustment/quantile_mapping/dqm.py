@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Literal
 import numpy as np
 
-from qm import QuantileMapping
+from bias_adjustment.quantile_mapping.qm import QuantileMapping
 
 
 @dataclass

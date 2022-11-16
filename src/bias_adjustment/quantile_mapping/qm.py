@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 
-from distributions import Distributions
+from bias_adjustment.distributions import Distributions
 
 
 @dataclass
