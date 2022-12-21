@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+
 import numpy as np
 
 from bias_adjustment.quantile_mapping import (
-    QuantileMapping,
     DetrendedQuantileMapping,
     QuantileDeltaMapping,
+    QuantileMapping,
 )
 
 
