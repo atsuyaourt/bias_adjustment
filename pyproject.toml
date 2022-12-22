@@ -1,36 +1,22 @@
-[build-system]
-requires = ["setuptools>=61.0.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "bias_adjustment"
-version = "0.1.0"
-description = "Bias Adjustment by Quantile Mapping"
+[tool.poetry]
+name = "bias-adjustment"
+version = "1.0.1"
+description = "Bias Adjusment by Quantile Mapping"
+authors = ["Emilio Gozo <emiliogozo@proton.me>"]
+license = "MIT"
 readme = "README.md"
-requires-python = ">=3.8"
-authors = [
-    { name = "Emilio Gozo", email = "emiliogozo@proton.me" }
-]
+repository = "https://github.com/emiliogozo/bias_adjustment"
 keywords = ["climatology", "data analysis", "quantile mapping", "bias correction"]
-classifiers = [
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-]
-dependencies = [
-    "numpy",
-    "scipy",
-]
+packages = [{include = "bias_adjustment", from = "src"}]
 
-[project.optional-dependencies]
-tests = [
-  "pytest",
-]
+[tool.poetry.dependencies]
+python = "^3.8"
+scipy = "^1.9.3"
+numpy = "^1.24.0"
 
-[tool.pytest.ini_options]
-pythonpath = "src/"
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
