@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 from typing import Literal
+
 import numpy as np
+import numpy.typing as npt
 
 from bias_adjustment.quantile_mapping.qm import QuantileMapping
+
+FloatNDArray = npt.NDArray[np.float64]
 
 
 @dataclass
@@ -20,7 +24,7 @@ class DetrendedQuantileMapping(QuantileMapping):
         self,
         mode: Literal["rel", "abs"] = "rel",
         dist_type="hist",
-    ) -> np.ndarray:
+    ) -> FloatNDArray:
         o_dist = self.generate_distribution(self.obs, dist_type)
         m_dist = self.generate_distribution(self.mod, dist_type)
 

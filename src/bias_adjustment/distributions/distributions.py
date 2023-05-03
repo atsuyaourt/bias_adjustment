@@ -5,14 +5,14 @@ import numpy as np
 import numpy.typing as npt
 from scipy import stats as st
 
-Vector = npt.NDArray[np.float64]
+FloatNDArray = npt.NDArray[np.float64]
 
 
-def fit_hist(data: Vector, bins=200):
+def fit_hist(data: FloatNDArray, bins=200):
     """Generate a distribution from a histogram
 
     Args:
-        data (Vector): Input data
+        data (FloatNDArray): Input data
         bins (int, optional): Number of bins. Defaults to 200.
 
     """
@@ -20,11 +20,11 @@ def fit_hist(data: Vector, bins=200):
     return st.rv_histogram(h)
 
 
-def fit_dist(data: Vector, dist_type="gamma"):
+def fit_dist(data: FloatNDArray, dist_type="gamma"):
     """Generate a distribution given a distribution type
 
     Args:
-        data (Vector): Input data.
+        data (FloatNDArray): Input data.
         dist_type (str, optional): Valid scipy.stats distribution name. Defaults to "gamma".
     """
     dist: st.rv_continuous = getattr(st, dist_type)
@@ -34,7 +34,7 @@ def fit_dist(data: Vector, dist_type="gamma"):
 
 @dataclass
 class Distributions:
-    data: Vector
+    data: FloatNDArray
 
     def fit(self, dist_type="hist", bins=200):
         """Generate distribution

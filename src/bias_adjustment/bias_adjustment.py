@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
+import numpy.typing as npt
 
 from bias_adjustment.quantile_mapping import (
     DetrendedQuantileMapping,
@@ -8,16 +9,18 @@ from bias_adjustment.quantile_mapping import (
     QuantileMapping,
 )
 
+FloatNDArray = npt.NDArray[np.float64]
+
 
 @dataclass
 class BiasAdjustment:
-    obs: np.ndarray
-    mod: np.ndarray
+    obs: FloatNDArray
+    mod: FloatNDArray
     max_cdf: float = 0.99999
 
     def adjust(
         self,
-        data: np.ndarray,
+        data: FloatNDArray,
         method="qm",
         dist_type="hist",
     ):
