@@ -1,21 +1,22 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import get_args
 
 import numpy as np
-import numpy.typing as npt
 
 from bias_adjustment.quantile_mapping.qm import QuantileMapping
-
-FloatNDArray = npt.NDArray[np.float64]
+from bias_adjustment.utils import BAMode, FloatNDArray
 
 
 @dataclass
 class QuantileDeltaMapping(QuantileMapping):
     def compute(
         self,
-        mode: Literal["rel", "abs"] = "rel",
+        mode: BAMode = "rel",
         dist_type="hist",
     ) -> FloatNDArray:
+        if mode not in get_args(BAMode):
+            raise ValueError(f"Length of `mode` must be {get_args(BAMode)}.")
+
         o_dist = self.generate_distribution(self.obs, dist_type)
         mh_dist = self.generate_distribution(self.mod, dist_type)
         mf_dist = self.generate_distribution(self.data, dist_type)

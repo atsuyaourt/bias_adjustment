@@ -19,6 +19,7 @@ conda-lock = "^1.4.0"
 pytest = "^7.3.1"
 flake8 = "^6.0.0"
 black = "^23.3.0"
+pytest-mock = "^3.10.0"
 
 [build-system]
 requires = ["poetry-core"]
