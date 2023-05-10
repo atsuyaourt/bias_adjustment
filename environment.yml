@@ -1,4 +1,3 @@
-name: /home/egozo/Research/workdir/scripts/python/bias_adjustment/.venv
 channels:
   - conda-forge
   - defaults
@@ -7,5 +6,3 @@ dependencies:
   - python>=3.8.1,<3.9
   - poetry=1
   - conda-lock
-platforms:
-  - linux-64
