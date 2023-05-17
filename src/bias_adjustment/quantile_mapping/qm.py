@@ -58,17 +58,23 @@ class QuantileMapping:
     def compute(
         self,
         dist_type="hist",
+        ignore_trace: bool = False,
     ) -> FloatNDArray:
         """Adjust the bias
 
         Args:
             dist_type (str, optional): Valid scipy.stats distribution name. Defaults to "hist".
+            ignore_trace (bool, optional): Ignore trace values? Defaults to "False".
 
         Returns:
             FloatNDArray: The adjusted values.
         """
-        o_dist = self.generate_distribution(self.obs, dist_type)
-        m_dist = self.generate_distribution(self.mod, dist_type)
+        o_dist = self.generate_distribution(
+            self.obs, dist_type, ignore_trace, self.trace_val
+        )
+        m_dist = self.generate_distribution(
+            self.mod, dist_type, ignore_trace, self.trace_val
+        )
 
         m_cdf = np.minimum(self.max_cdf, m_dist.cdf(self.data))
         return o_dist.ppf(m_cdf)

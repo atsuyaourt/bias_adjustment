@@ -22,12 +22,17 @@ class DetrendedQuantileMapping(QuantileMapping):
         self,
         mode: BAMode = "rel",
         dist_type="hist",
+        ignore_trace: bool = False,
     ) -> FloatNDArray:
         if mode not in get_args(BAMode):
             raise ValueError(f"Length of `mode` must be {get_args(BAMode)}.")
 
-        o_dist = self.generate_distribution(self.obs, dist_type)
-        m_dist = self.generate_distribution(self.mod, dist_type)
+        o_dist = self.generate_distribution(
+            self.obs, dist_type, ignore_trace, self.trace_val
+        )
+        m_dist = self.generate_distribution(
+            self.mod, dist_type, ignore_trace, self.trace_val
+        )
 
         delta = self.delta(mode)
         if mode == "rel":
