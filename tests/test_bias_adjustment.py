@@ -101,10 +101,12 @@ class TestBiasAdjustment:
                     obj.adjust(**params)
                     if mode is not None:
                         mock_compute.assert_called_once_with(
-                            mode=mode, dist_type="hist"
+                            mode=mode, dist_type="hist", ignore_trace=False
                         )
                     else:
-                        mock_compute.assert_called_once_with(dist_type="hist")
+                        mock_compute.assert_called_once_with(
+                            dist_type="hist", ignore_trace=False
+                        )
                 elif method.startswith("qdm"):
                     mode = _get_ba_mode(method)
                     mock_compute = mocker.patch.object(QuantileDeltaMapping, "compute")
@@ -112,10 +114,12 @@ class TestBiasAdjustment:
                     obj.adjust(**params)
                     if mode is not None:
                         mock_compute.assert_called_once_with(
-                            mode=mode, dist_type="hist"
+                            mode=mode, dist_type="hist", ignore_trace=False
                         )
                     else:
-                        mock_compute.assert_called_once_with(dist_type="hist")
+                        mock_compute.assert_called_once_with(
+                            dist_type="hist", ignore_trace=False
+                        )
             else:
                 assert is_float_ndarray(obj.adjust(**params))
                 mock_compute = mocker.patch.object(QuantileMapping, "compute")

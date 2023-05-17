@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from bias_adjustment.const import MAX_CDF
+from bias_adjustment.const import MAX_CDF, TRACE_VAL
 from bias_adjustment.quantile_mapping import (
     DetrendedQuantileMapping,
     QuantileDeltaMapping,
@@ -21,6 +21,7 @@ class BiasAdjustment:
     obs: FloatNDArray
     mod: FloatNDArray
     max_cdf: float = MAX_CDF
+    trace_val: float = TRACE_VAL
 
     def __post_init__(self):
         for name in ["obs", "mod"]:
@@ -44,35 +45,32 @@ class BiasAdjustment:
         data: FloatNDArray,
         method="qm",
         dist_type="hist",
+        ignore_trace: bool = False,
     ):
         if method == "qm":
             return QuantileMapping(
-                self.obs, self.mod, data, max_cdf=self.max_cdf
-            ).compute(dist_type=dist_type)
+                self.obs, self.mod, data, max_cdf=self.max_cdf, trace_val=self.trace_val
+            ).compute(dist_type=dist_type, ignore_trace=ignore_trace)
         elif method.startswith("dqm"):
             mode = _get_ba_mode(method)
             qm = DetrendedQuantileMapping(
-                self.obs, self.mod, data, max_cdf=self.max_cdf
+                self.obs, self.mod, data, max_cdf=self.max_cdf, trace_val=self.trace_val
             )
             if mode is not None:
                 return qm.compute(
-                    mode=mode,
-                    dist_type=dist_type,
+                    mode=mode, dist_type=dist_type, ignore_trace=ignore_trace
                 )
-            return qm.compute(
-                dist_type=dist_type,
-            )
+            return qm.compute(dist_type=dist_type, ignore_trace=ignore_trace)
         elif method.startswith("qdm"):
             mode = _get_ba_mode(method)
-            qm = QuantileDeltaMapping(self.obs, self.mod, data, max_cdf=self.max_cdf)
+            qm = QuantileDeltaMapping(
+                self.obs, self.mod, data, max_cdf=self.max_cdf, trace_val=self.trace_val
+            )
             if mode is not None:
                 return qm.compute(
-                    mode=mode,
-                    dist_type=dist_type,
+                    mode=mode, dist_type=dist_type, ignore_trace=ignore_trace
                 )
-            return qm.compute(
-                dist_type=dist_type,
-            )
+            return qm.compute(dist_type=dist_type, ignore_trace=ignore_trace)
         return QuantileMapping(self.obs, self.mod, data, max_cdf=self.max_cdf).compute(
             dist_type=dist_type
         )
