@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from bias_adjustment.const import MAX_CDF
 from bias_adjustment.distributions import Distributions
 from bias_adjustment.utils import FloatNDArray, is_float_ndarray
 
@@ -11,7 +12,7 @@ class QuantileMapping:
     obs: FloatNDArray
     mod: FloatNDArray
     data: FloatNDArray
-    max_cdf: float = 0.99999
+    max_cdf: float = MAX_CDF
 
     def __post_init__(self):
         for name in ["obs", "mod", "data"]:

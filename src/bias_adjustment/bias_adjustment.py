@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from bias_adjustment.const import MAX_CDF
 from bias_adjustment.quantile_mapping import (
     DetrendedQuantileMapping,
     QuantileDeltaMapping,
@@ -19,7 +20,7 @@ def _get_ba_mode(method: str):
 class BiasAdjustment:
     obs: FloatNDArray
     mod: FloatNDArray
-    max_cdf: float = 0.99999
+    max_cdf: float = MAX_CDF
 
     def __post_init__(self):
         for name in ["obs", "mod"]:
