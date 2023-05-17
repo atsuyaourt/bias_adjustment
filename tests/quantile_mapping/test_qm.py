@@ -3,7 +3,7 @@ import pytest
 
 from bias_adjustment.quantile_mapping.qm import QuantileMapping
 from bias_adjustment.utils import is_array_like, is_float_ndarray
-from tests.data import max_cdf, modf, modh, obs
+from tests.data import max_cdf, modf, modh, obs, trace_val
 
 
 class TestQuantileMapping:
@@ -21,6 +21,8 @@ class TestQuantileMapping:
             ({"obs": obs, "mod": modh, "data": modf, "max_cdf": "0.88"}, TypeError),
             ({"obs": obs, "mod": modh, "data": modf, "max_cdf": 1.2}, ValueError),
             ({"obs": obs, "mod": modh, "data": modf, "max_cdf": -0.5}, ValueError),
+            ({"obs": obs, "mod": modh, "data": modf, "trace_val": trace_val}, None),
+            ({"obs": obs, "mod": modh, "data": modf, "trace_val": "0.88"}, TypeError),
         ],
         ids=[
             "default",
@@ -34,6 +36,8 @@ class TestQuantileMapping:
             "max_cdf: wrong type",
             "max_cdf: should be < 1",
             "max_cdf: should be >= 0.5",
+            "trace_val: default",
+            "trace_val: wrong type",
         ],
     )
     def test_init(self, params, error):

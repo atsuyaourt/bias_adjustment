@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bias-adjustment"
-version = "1.0.2"
+version = "1.0.3"
 description = "Bias Adjusment by Quantile Mapping"
 authors = ["Emilio Gozo <emiliogozo@proton.me>"]
 license = "MIT"
