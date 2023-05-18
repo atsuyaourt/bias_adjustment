@@ -27,7 +27,7 @@ def _fit_hist(data: FloatNDArray, bins=200):
         if not isinstance(v, int):
             raise TypeError(f"`{v}` is not an integer.")
 
-    h = np.histogram(data[~np.isnan(data)], bins=bins)
+    h = np.histogram(data[~np.isnan(data)], bins=bins, density=True)
     return st.rv_histogram(h)
 
 
