@@ -3,22 +3,20 @@ name: Python Package using Conda
 on: [push]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  miniforge:
+    runs-on: ${{ matrix.os }}-latest
     defaults:
       run:
         shell: bash -el {0}
+    strategy:
+      matrix:
+        os: ["ubuntu", "macos", "windows"]
     steps:
-    - uses: actions/checkout@v3
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: 3.8
-        mamba-version: "*"
-        channels: conda-forge,defaults
-        channel-priority: true
-        activate-environment: toolbox
-        environment-file: environment.yml
-    - name: Install dependencies
-      run: poetry install
-    - name: Test
-      run: poetry run pytest
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: devbox
+          environment-file: etc/dev.yml
+          miniforge-version: latest
+      - name: Test
+        run: tox -e py310,py311,py312

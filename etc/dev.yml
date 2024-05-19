@@ -1,0 +1,6 @@
+name: devbox
+channels:
+  - conda-forge
+dependencies:
+  - poetry
+  - tox
